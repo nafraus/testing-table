@@ -3,36 +3,424 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Testing Table</title>
+  <title>Flight School Cost Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f5f5;
-      color: #333;
+      background: #0f1117;
+      color: #e0e0e0;
       padding: 2rem;
+      min-height: 100vh;
     }
 
     h1 {
-      margin-bottom: 0.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
+      color: #ffffff;
     }
 
-    p {
-      color: #666;
+    h2 {
+      font-size: 1.1rem;
+      color: #7ec8e3;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #2a2a3a;
+      padding-bottom: 0.4rem;
     }
+
+    .section {
+      background: #1a1a2e;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    input[type="number"] {
+      background: #12121f;
+      border: 1px solid #2a2a3a;
+      border-radius: 6px;
+      color: #e0e0e0;
+      padding: 0.5rem 0.7rem;
+      font-size: 1rem;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #7ec8e3;
+    }
+
+    .calc-btn {
+      display: block;
+      width: 100%;
+      background: #7ec8e3;
+      color: #0f1117;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: background 0.2s;
+    }
+
+    .calc-btn:hover { background: #5bb5d6; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+
+    .summary-card .label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .summary-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .summary-card .sub {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.2rem;
+    }
+
+    .income .value { color: #4ade80; }
+    .expenses .value { color: #f87171; }
+    .net .value { color: #fbbf24; }
+    .net.positive .value { color: #4ade80; }
+    .net.negative .value { color: #f87171; }
+
+    .chart-container {
+      background: #1a1a2e;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+
+    canvas { max-height: 350px; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+
+    .detail-section {
+      background: #1a1a2e;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid #2a2a3a;
+      font-size: 0.9rem;
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .label { color: #888; }
+    .detail-row .value { color: #e0e0e0; font-weight: 500; }
   </style>
 </head>
 <body>
-  <h1>Testing Table</h1>
-  <p>Start editing to build your table.</p>
+
+  <h1>✈️ Flight School Cost Calculator</h1>
+
+  <!-- Revenue -->
+  <div class="section">
+    <h2>💰 Revenue</h2>
+    <div class="grid-2">
+      <div class="field">
+        <label>Flight Hours / Month</label>
+        <input type="number" id="flightHours" value="40" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <label>Ground Hours / Month</label>
+        <input type="number" id="groundHours" value="15" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <label>Instructor Rate ($/hr)</label>
+        <input type="number" id="instructorRate" value="60" min="0">
+      </div>
+      <div class="field">
+        <label>Aircraft Wet Rate ($/hr)</label>
+        <input type="number" id="wetRate" value="180" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- Fuel -->
+  <div class="section">
+    <h2>⛽ Fuel</h2>
+    <div class="grid-2">
+      <div class="field">
+        <label>Fuel Burn (gal/hr)</label>
+        <input type="number" id="fuelBurn" value="10" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <label>Fuel Price ($/gal)</label>
+        <input type="number" id="fuelPrice" value="6.50" min="0" step="0.01">
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Costs -->
+  <div class="section">
+    <h2>📋 Fixed Monthly Costs</h2>
+    <div class="grid-3">
+      <div class="field">
+        <label>Hangar ($/mo)</label>
+        <input type="number" id="hangar" value="1500" min="0">
+      </div>
+      <div class="field">
+        <label>Insurance ($/mo)</label>
+        <input type="number" id="insurance" value="800" min="0">
+      </div>
+      <div class="field">
+        <label>Mechanical Labor ($/mo)</label>
+        <input type="number" id="mechLabor" value="1000" min="0">
+      </div>
+      <div class="field">
+        <label>Misc Costs ($/mo)</label>
+        <input type="number" id="miscCosts" value="300" min="0">
+      </div>
+      <div class="field">
+        <label>Parts Reserve ($/flight hr)</label>
+        <input type="number" id="partsReserve" value="15" min="0">
+      </div>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">Calculate</button>
+
+  <!-- Summary Cards -->
+  <div class="summary" id="summaryCards" style="display:none;">
+    <div class="summary-card income">
+      <div class="label">Total Income</div>
+      <div class="value" id="totalIncome">$0</div>
+      <div class="sub" id="incomeBreakdown"></div>
+    </div>
+    <div class="summary-card expenses">
+      <div class="label">Total Expenses</div>
+      <div class="value" id="totalExpenses">$0</div>
+      <div class="sub" id="expensesBreakdown"></div>
+    </div>
+    <div class="summary-card net" id="netCard">
+      <div class="label">Net Profit</div>
+      <div class="value" id="netProfit">$0</div>
+      <div class="sub" id="netMargin"></div>
+    </div>
+  </div>
+
+  <!-- Details -->
+  <div class="detail-grid" id="detailGrid" style="display:none;">
+    <div class="detail-section">
+      <h2 style="color:#4ade80; margin-bottom:0.8rem;">📈 Income Breakdown</h2>
+      <div class="detail-row"><span class="label">Flight Revenue</span><span class="value" id="flightRevenue">$0</span></div>
+      <div class="detail-row"><span class="label">Ground Revenue</span><span class="value" id="groundRevenue">$0</span></div>
+      <div class="detail-row" style="border-top:1px solid #3a3a4a; margin-top:0.5rem; padding-top:0.5rem; font-weight:700;">
+        <span class="label">Total Income</span><span class="value" style="color:#4ade80" id="incomeTotal">$0</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h2 style="color:#f87171; margin-bottom:0.8rem;">📉 Expense Breakdown</h2>
+      <div class="detail-row"><span class="label">Fuel Cost</span><span class="value" id="fuelCost">$0</span></div>
+      <div class="detail-row"><span class="label">Hangar</span><span class="value" id="hangarCost">$0</span></div>
+      <div class="detail-row"><span class="label">Insurance</span><span class="value" id="insuranceCost">$0</span></div>
+      <div class="detail-row"><span class="label">Mechanic Labor</span><span class="value" id="mechCost">$0</span></div>
+      <div class="detail-row"><span class="label">Misc</span><span class="value" id="miscCost">$0</span></div>
+      <div class="detail-row"><span class="label">Parts Reserve</span><span class="value" id="partsCost">$0</span></div>
+      <div class="detail-row" style="border-top:1px solid #3a3a4a; margin-top:0.5rem; padding-top:0.5rem; font-weight:700;">
+        <span class="label">Total Expenses</span><span class="value" style="color:#f87171" id="expensesTotal">$0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-container" id="chartContainer" style="display:none;">
+    <canvas id="summaryChart"></canvas>
+  </div>
+
   <script>
-    // Your code here
-    console.log('testing-table loaded')
+    let chart = null;
+
+    function get(id) {
+      return parseFloat(document.getElementById(id).value) || 0;
+    }
+
+    function fmt(n) {
+      return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function calculate() {
+      const fh = get('flightHours');
+      const gh = get('groundHours');
+      const ir = get('instructorRate');
+      const wr = get('wetRate');
+      const fb = get('fuelBurn');
+      const fp = get('fuelPrice');
+      const hangar = get('hangar');
+      const insurance = get('insurance');
+      const mech = get('mechLabor');
+      const misc = get('miscCosts');
+      const parts = get('partsReserve');
+
+      // Revenue
+      const flightRevenue = fh * (ir + wr);
+      const groundRevenue = gh * ir;
+      const totalIncome = flightRevenue + groundRevenue;
+
+      // Expenses
+      const fuelCost = fh * fb * fp;
+      const partsCost = fh * parts;
+      const totalExpenses = fuelCost + hangar + insurance + mech + misc + partsCost;
+
+      // Net
+      const netProfit = totalIncome - totalExpenses;
+      const margin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+
+      // Summary cards
+      document.getElementById('summaryCards').style.display = 'grid';
+      document.getElementById('totalIncome').textContent = fmt(totalIncome);
+      document.getElementById('incomeBreakdown').textContent = `${fmt(flightRevenue)} flight + ${fmt(groundRevenue)} ground`;
+      document.getElementById('totalExpenses').textContent = fmt(totalExpenses);
+      document.getElementById('expensesBreakdown').textContent = `${fmt(fuelCost)} fuel + fixed costs`;
+      document.getElementById('netProfit').textContent = (netProfit >= 0 ? '+' : '') + fmt(netProfit);
+      document.getElementById('netMargin').textContent = `Margin: ${margin.toFixed(1)}%`;
+      document.getElementById('netCard').className = 'summary-card net ' + (netProfit >= 0 ? 'positive' : 'negative');
+
+      // Detail breakdown
+      document.getElementById('detailGrid').style.display = 'grid';
+      document.getElementById('flightRevenue').textContent = fmt(flightRevenue);
+      document.getElementById('groundRevenue').textContent = fmt(groundRevenue);
+      document.getElementById('incomeTotal').textContent = fmt(totalIncome);
+      document.getElementById('fuelCost').textContent = fmt(fuelCost);
+      document.getElementById('hangarCost').textContent = fmt(hangar);
+      document.getElementById('insuranceCost').textContent = fmt(insurance);
+      document.getElementById('mechCost').textContent = fmt(mech);
+      document.getElementById('miscCost').textContent = fmt(misc);
+      document.getElementById('partsCost').textContent = fmt(partsCost);
+      document.getElementById('expensesTotal').textContent = fmt(totalExpenses);
+
+      // Chart
+      document.getElementById('chartContainer').style.display = 'block';
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(document.getElementById('summaryChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Total Income', 'Total Expenses', 'Net Profit'],
+          datasets: [{
+            label: 'Amount ($)',
+            data: [totalIncome, totalExpenses, netProfit],
+            backgroundColor: [
+              'rgba(74, 222, 128, 0.7)',
+              'rgba(248, 113, 113, 0.7)',
+              netProfit >= 0 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(248, 113, 113, 0.7)'
+            ],
+            borderColor: [
+              '#4ade80',
+              '#f87171',
+              netProfit >= 0 ? '#4ade80' : '#f87171'
+            ],
+            borderWidth: 2,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: 'Monthly Summary',
+              color: '#e0e0e0',
+              font: { size: 16 }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => '  ' + fmt(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#888' },
+              grid: { color: '#2a2a3a' }
+            },
+            y: {
+              ticks: {
+                color: '#888',
+                callback: v => '$' + v.toLocaleString()
+              },
+              grid: { color: '#2a2a3a' }
+            }
+          }
+        }
+      });
+    }
+
+    // Auto-calculate on load
+    calculate();
   </script>
 </body>
 </html>
