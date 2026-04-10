@@ -419,7 +419,10 @@
       });
     }
 
-    // Auto-calculate on load
+    // Auto-calculate on load and on input change
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', calculate)
+    })
     calculate();
   </script>
 </body>
